@@ -24,9 +24,26 @@
 
 账户当前可用资金的当前事实。余额由交易推导而来，是交易的投影，因此必须与交易一致（不错）。
 
-### 优惠（Coupon / Voucher）
+### 优惠（Promotion）
 
-激励客户购买的手段，分优惠券与代金券。优惠有生命周期：发放、使用、过期。意图中的关键难点「代金券是否优先于余额」正是优惠参与结算时的规则问题。
+激励客户购买的手段。按抵扣方式分为两类，意图中「优惠券什么时候用」与「代金券是否优先于余额」正是这两类各自的关注点。
+
+**优惠券（Coupon）** — 按规则抵扣，关注「什么时候用」：
+
+- 折扣券：按比例优惠（如 9 折），力度是折扣比例
+- 满减券：满足门槛后减额（如满 100 减 20），门槛与减额构成力度
+- 使用时机由计费规则决定
+
+**代金券（Voucher）** — 直接抵现，关注「优先于余额吗」：
+
+- 面值固定，等价于现金
+- 与余额一样代表「钱」，结算先后由计费规则决定
+
+两类共有的属性：
+
+- 适用范围：全场通用 / 指定业务（云服务、课程、数据服务）/ 指定商品
+- 有效期：过期后不可用
+- 状态：已发放 / 已使用 / 已过期
 
 ### 计费规则（Billing Rule）
 
@@ -55,13 +72,20 @@ classDiagram
         +orderId
         +createdAt
     }
-    class Coupon {
+    class Promotion {
         +id
         +accountId
-        +type: 优惠券/代金券
-        +faceValue
+        +scope: 全场/指定业务/指定商品
+        +expiresAt
         +status: 已发放/已使用/已过期
-        +use()
+    }
+    class Coupon {
+        +type: 折扣券/满减券
+        +rate
+        +threshold
+    }
+    class Voucher {
+        +amount
     }
     class BillingRule {
         +id
@@ -76,15 +100,18 @@ classDiagram
         +settle()
     }
 
+    Promotion <|-- Coupon
+    Promotion <|-- Voucher
     Account "1" --> "0..*" Transaction : 产生
-    Account "1" --> "0..*" Coupon : 持有
+    Account "1" --> "0..*" Promotion : 持有
     Order "1" --> "1..*" BillingRule : 应用
     BillingRule --> Coupon : 核销
+    BillingRule --> Voucher : 抵现
     BillingRule --> Account : 扣余额
     Order "1" --> "1..*" Transaction : 生成
 ```
 
-优惠的生命周期：
+优惠的生命周期（两类通用）：
 
 ```mermaid
 stateDiagram-v2
@@ -99,7 +126,7 @@ stateDiagram-v2
 
 1. **充值**：对公打款 → 登记入账 → 账户余额增加，生成充值交易
 2. **发券**：直接发放优惠券/代金券 → 优惠状态为「已发放」
-3. **消费**：客户购买付费服务 → 计费规则决定用券还是扣余额 → 生成消费交易 → 更新余额与优惠状态
+3. **消费**：客户购买付费服务 → 计费规则决定抵扣顺序（优惠券、代金券、余额的先后）→ 生成消费交易 → 更新余额与优惠状态
 4. **对账**：余额与交易对得上、交易可追溯，是「不错、可查」的落地
 
 ## 与意图的对应
