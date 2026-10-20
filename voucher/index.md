@@ -22,7 +22,8 @@
 
 - [发行](issuance.md) — 挣券渠道、劳动计量、发行即负债与发行来源
 - [核销](redemption.md) — 购买专家资源、购买申请额度与核销标的
-- [定价](pricing.md) — 服务者职级锚点、渠道决定是否计费、结算顺序
 - [治理](governance.md) — 发行权与预算、历史结算、规则边界等开放问题
+
+代金券的定价规则见 [intro/pricing.md](../intro/pricing.md)。
 
 代金券的领域概念与形式化规则见 specification 仓库 `docs/specification/voucher/index.md`。
